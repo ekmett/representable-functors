@@ -33,6 +33,7 @@ library
     transformers >= 0.2.0 && < 0.3
 
   exposed-modules:
+    Data.Functor.Corepresentable
     Data.Functor.Representable
     Control.Monad.Representable
 

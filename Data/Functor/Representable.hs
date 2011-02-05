@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances #-}
-{-# OPTIONS_GHC -fenable-rewrite-rules -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fenable-rewrite-rules #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      :  Data.Functor.Representable
