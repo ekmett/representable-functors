@@ -50,7 +50,8 @@ import Data.Key
 import Data.Functor.Bind
 import Data.Functor.Identity
 import Data.Functor.Compose
-import Data.Monoid
+import Data.Functor.Product
+import Data.Monoid hiding (Product)
 import Prelude hiding (lookup)
 
 -- | A 'Functor' @f@ is 'Representable' if 'tabulate' and 'index' witness an isomorphism to @(->) x@.
@@ -59,7 +60,7 @@ import Prelude hiding (lookup)
 -- > index . tabulate = id
 -- > tabulate . return f = return f
 
-class (Index f, Distributive f, Keyed f, Apply f, Applicative f {- , Bind f, Monad f -}) => Representable f where
+class (Indexable f, Distributive f, Keyed f, Apply f, Applicative f) => Representable f where
   -- | > fmap f . tabulate = tabulate . fmap f
   tabulate :: (Key f -> a) -> f a
 
@@ -102,7 +103,7 @@ duplicateRep w = tabulate (\m -> tabulate (index w . (<>) m))
 extendRep :: (Representable f, Semigroup (Key f)) => (f a -> b) -> f a -> f b
 extendRep f w = tabulate (\m -> f (tabulate (index w . (<>) m)))
 
-extractRep :: (Index f, Monoid (Key f)) => f a -> a
+extractRep :: (Indexable f, Monoid (Key f)) => f a -> a
 extractRep fa = index fa mempty
 
 -- * Instances
@@ -125,21 +126,6 @@ instance (Representable f, Representable g) => Representable (Compose f g) where
 instance Representable w => Representable (TracedT s w) where
   tabulate = TracedT . collect tabulate . curry
 
-
-{-
--- * Orphans
-instance (Representable f, Bind m) => Bind (Compose f m) where
-  Compose fm >>- f = Compose $ tabulate (\a -> index fm a >>- flip index a . getCompose . f)
-
-instance Representable w => Monad (TracedT s w) where
-  return = TracedT . pure . pure
-  TracedT fm >>= f = TracedT $ tabulate (\a -> index fm a >>= flip index a . runTracedT . f)
-
-instance Representable w => Bind (TracedT s w) where
-  TracedT fm >>- f = TracedT $ tabulate (\a -> index fm a >>- flip index a . runTracedT . f)
-  
-instance (Representable f, Monad m) => Monad (Compose f m) where
-  return = Compose . pure . return
-  Compose fm >>= f = Compose $ tabulate (\a -> index fm a >>= flip index a . getCompose . f)
--}
+instance (Representable f, Representable g) => Representable (Product f g) where
+  tabulate f = Pair (tabulate (f . Left)) (tabulate (f . Right))
 

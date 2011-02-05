@@ -83,7 +83,7 @@ instance (Representable f, Distributive m) => Distributive (RepT f m) where
 instance (Keyed f, Keyed m) => Keyed (RepT f m) where
   mapWithKey f = RepT . mapWithKey (\k -> mapWithKey (f . (,) k)) . runRepT
 
-instance (Index f, Index m) => Index (RepT f m) where
+instance (Indexable f, Indexable m) => Indexable (RepT f m) where
   index = uncurry . fmap index . index . runRepT
 
 instance (Lookup f, Lookup m) => Lookup (RepT f m) where
