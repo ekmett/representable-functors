@@ -17,7 +17,8 @@
 
 module Data.Functor.Corepresentable
   ( 
-    Value -- ^ a contravariant version of Key
+  -- * Values
+    Value
   -- * Contravariant Keyed
   , Valued(..)
   -- * Contravariant Indexed
