@@ -1,6 +1,6 @@
 name:          representable-functors
 category:      Monads, Functors, Data Structures
-version:       0.1.0.1
+version:       0.1.0.2
 license:       BSD3
 cabal-version: >= 1.6
 license-file:  LICENSE
@@ -9,8 +9,8 @@ maintainer:    Edward A. Kmett <ekmett@gmail.com>
 stability:     provisional
 homepage:      http://github.com/ekmett/representable-functors/
 copyright:     Copyright (C) 2011 Edward A. Kmett
-synopsis:      Adjunctions
-description:   Adjunctions
+synopsis:      Representable functors
+description:   Representable functors
 build-type:    Simple
 
 source-repository head
