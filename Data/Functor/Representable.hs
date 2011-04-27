@@ -18,6 +18,8 @@ module Data.Functor.Representable
   ( 
   -- * Representable Functors
     Representable(..)
+  -- ** Representable Lenses
+  , repLens 
   -- * Default definitions
   -- ** Functor
   , fmapRep
@@ -52,6 +54,7 @@ import Data.Functor.Identity
 import Data.Functor.Compose
 import Data.Functor.Product
 import Data.Monoid hiding (Product)
+import Data.Lens.Common
 import Prelude hiding (lookup)
 
 -- | A 'Functor' @f@ is 'Representable' if 'tabulate' and 'index' witness an isomorphism to @(->) x@.
@@ -105,6 +108,10 @@ extendRep f w = tabulate (\m -> f (tabulate (index w . (<>) m)))
 
 extractRep :: (Indexable f, Monoid (Key f)) => f a -> a
 extractRep fa = index fa mempty
+
+-- | We extend lens across a representable functor, due to the preservation of limits.
+repLens :: Representable f => Lens a b -> Lens (f a) (f b)
+repLens l = lens (fmap (l ^$)) (liftA2 (l ^=))
 
 -- * Instances
 
