@@ -86,6 +86,9 @@ instance (Keyed f, Keyed m) => Keyed (RepT f m) where
 instance (Indexable f, Indexable m) => Indexable (RepT f m) where
   index = uncurry . fmap index . index . runRepT
 
+instance (Adjustable f, Adjustable m) => Adjustable (RepT f m) where
+  adjust f (kf,km) = RepT . adjust (adjust f km) kf . runRepT
+
 instance (Lookup f, Lookup m) => Lookup (RepT f m) where
   lookup (k,k') (RepT fm) = lookup k fm >>= lookup k'
 
