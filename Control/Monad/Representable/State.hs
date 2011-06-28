@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilies
+           , TypeSynonymInstances
            , FlexibleContexts
            , FlexibleInstances
            , MultiParamTypeClasses
@@ -40,10 +41,11 @@ import Control.Applicative
 import Data.Key
 import Data.Functor.Bind
 import Data.Functor.Bind.Trans
--- import Control.Monad.State.Class
+import Control.Monad.State.Class
 import Control.Monad.Cont.Class
 import Control.Monad.Reader.Class
 import Control.Monad.Writer.Class
+import Control.Monad.Free.Class
 import Control.Monad.Trans.Class
 import Control.Monad.Identity
 import Data.Functor.Representable
@@ -161,18 +163,18 @@ instance Representable f => BindTrans (StateT f) where
 instance Representable f => MonadTrans (StateT f) where
   lift m = stateT $ \s -> liftM (\a -> (a, s)) m
 
--- instance (Representable g, Monad m) => MonadState (Key g) (StateT g m) where
-get :: (Representable g, Monad m) => StateT g m (Key g)
-get = stateT $ \s -> return (s, s)
+instance (Representable g, Monad m, Key g ~ s) => MonadState s (StateT g m) where
+  get = stateT $ \s -> return (s, s)
+  put s = StateT $ pure $ return ((),s)
 
-put :: (Applicative g, Monad m) => Key g -> StateT g m ()
-put s = StateT $ pure $ return ((),s)
+-- get :: (Representable g, Monad m) => StateT g m (Key g)
+-- put :: (Applicative g, Monad m) => Key g -> StateT g m ()
 
-gets :: (Representable g, Monad m) => (Key g -> s) -> StateT g m s
-gets f = liftM f get
+-- gets :: (Representable g, Monad m) => (Key g -> s) -> StateT g m s
+-- gets f = liftM f get
 
-modify :: (Representable g, Monad m) => (Key g -> Key g) -> StateT g m ()
-modify f = stateT $ \s -> return ((), f s)
+-- modify :: (Representable g, Monad m) => (Key g -> Key g) -> StateT g m ()
+-- modify f = stateT $ \s -> return ((), f s)
 
 instance (Representable g, MonadReader e m) => MonadReader e (StateT g m) where
   ask = lift ask
@@ -189,6 +191,9 @@ instance (Representable g, MonadWriter w m) => MonadWriter w (StateT g m) where
 
 instance (Representable g, MonadCont m) => MonadCont (StateT g m) where
     callCC = liftCallCC' callCC
+
+instance (Functor f, Representable g, MonadFree f m) => MonadFree f (StateT g m) where
+    wrap as = stateT $ \s -> wrap (fmap (`runStateT` s) as)
   
 leftAdjunctRep :: Representable u => ((a, Key u) -> b) -> a -> u b
 leftAdjunctRep f a = tabulate (\s -> f (a,s))

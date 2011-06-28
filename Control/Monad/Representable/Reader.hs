@@ -27,7 +27,7 @@ module Control.Monad.Representable.Reader
 
 import Control.Applicative
 import Control.Comonad
--- import Control.Monad.Reader.Class
+import Control.Monad.Reader.Class
 import Control.Monad.Writer.Class as Writer
 import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
@@ -80,15 +80,9 @@ instance (Representable f, Monad m) => Monad (ReaderT f m) where
   return = ReaderT . pure . return
   ReaderT fm >>= f = ReaderT $ tabulate (\a -> index fm a >>= flip index a . getReaderT . f)
 
--- TODO: add instance when GHC allows equality constraints on superclasses in a platform release
--- instance (Representable f, Monad m) => MonadReader (Key f) (ReaderT f m) where 
---   ask = ReaderT (tabulate return)
-
-ask :: (Representable f, Monad m) => ReaderT f m (Key f) 
-ask = ReaderT (tabulate return)
-
-local :: Representable f => (Key f -> Key f) -> ReaderT f m a -> ReaderT f m a
-local f m = readerT $ \r -> runReaderT m (f r)
+instance (Representable f, Monad m, Key f ~ e) => MonadReader e (ReaderT f m) where 
+  ask = ReaderT (tabulate return)
+  local f m = readerT $ \r -> runReaderT m (f r)
   
 instance Representable f => MonadTrans (ReaderT f) where
   lift = ReaderT . pure 
