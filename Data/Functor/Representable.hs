@@ -33,6 +33,9 @@ module Data.Functor.Representable
   -- ** Bind/Monad
   , bindRep
   , bindWithKeyRep
+  -- ** Zip/ZipWithKey
+  , zipWithRep
+  , zipWithKeyRep
   -- ** MonadReader
   , askRep
   , localRep
@@ -63,7 +66,7 @@ import Prelude hiding (lookup)
 -- > index . tabulate = id
 -- > tabulate . return f = return f
 
-class (Indexable f, Distributive f, Keyed f, Apply f, Applicative f) => Representable f where
+class (Indexable f, Distributive f, Keyed f, Apply f, Applicative f, ZipWithKey f) => Representable f where
   -- | > fmap f . tabulate = tabulate . fmap f
   tabulate :: (Key f -> a) -> f a
 
@@ -96,6 +99,12 @@ localRep f m = tabulate (index m . f)
 
 apRep :: Representable f => f (a -> b) -> f a -> f b
 apRep f g = tabulate (index f <*> index g) 
+
+zipWithRep :: Representable f => (a -> b -> c) -> f a -> f b -> f c
+zipWithRep f g h = tabulate $ \k -> f (index g k) (index h k)
+
+zipWithKeyRep :: Representable f => (Key f -> a -> b -> c) -> f a -> f b -> f c
+zipWithKeyRep f g h = tabulate $ \k -> f k (index g k) (index h k)
 
 distributeRep :: (Representable f, Functor w) => w (f a) -> f (w a)
 distributeRep wf = tabulate (\k -> fmap (`index` k) wf)

@@ -133,6 +133,12 @@ instance (Representable f, Representable m, Semigroup (Key f), Semigroup (Key m)
   extend = extendRep
   duplicate = duplicateRep
 
+instance (Representable f, Representable m) => Zip (ReaderT f m) where
+  zipWith = zipWithRep
+
+instance (Representable f, Representable m) => ZipWithKey (ReaderT f m) where
+  zipWithKey = zipWithKeyRep
+
 instance (Representable f, Representable m, Semigroup (Key f), Semigroup (Key m), Monoid (Key f), Monoid (Key m)) => Comonad (ReaderT f m) where
   extract = extractRep
 
