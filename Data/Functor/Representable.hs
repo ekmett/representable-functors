@@ -58,6 +58,7 @@ import Data.Functor.Compose
 import Data.Functor.Product
 import Data.Monoid hiding (Product)
 import Data.Lens.Common
+import Data.Semigroup hiding (Product)
 import Prelude hiding (lookup)
 
 -- | A 'Functor' @f@ is 'Representable' if 'tabulate' and 'index' witness an isomorphism to @(->) x@.

@@ -34,6 +34,7 @@ import Control.Applicative
 import Data.Key
 import Data.Functor.Apply
 import Data.Monoid
+import Data.Semigroup
 import Control.Comonad.Hoist.Class
 import Control.Comonad.Env.Class
 import Control.Comonad.Traced.Class
