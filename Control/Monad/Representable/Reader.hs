@@ -37,7 +37,6 @@ import Data.Functor.Bind
 import Data.Functor.Identity
 import Data.Functor.Representable
 import Data.Foldable
-import Data.Monoid
 import Data.Traversable
 import Data.Semigroup
 import Data.Semigroup.Foldable

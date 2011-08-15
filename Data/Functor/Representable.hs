@@ -56,7 +56,6 @@ import Data.Functor.Bind
 import Data.Functor.Identity
 import Data.Functor.Compose
 import Data.Functor.Product
-import Data.Monoid hiding (Product)
 import Data.Lens.Common
 import Data.Semigroup hiding (Product)
 import Prelude hiding (lookup)
