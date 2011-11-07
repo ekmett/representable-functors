@@ -48,6 +48,7 @@ module Data.Functor.Representable
 
 import Control.Applicative
 import Control.Comonad.Trans.Traced
+import Control.Comonad.Cofree
 import Control.Monad.Trans.Identity
 import Control.Monad.Reader
 import Data.Distributive
@@ -57,6 +58,7 @@ import Data.Functor.Identity
 import Data.Functor.Compose
 import Data.Functor.Product
 import Data.Lens.Common
+import qualified Data.Sequence as Seq
 import Data.Semigroup hiding (Product)
 import Prelude hiding (lookup)
 
@@ -77,7 +79,7 @@ class (Indexable f, Distributive f, Keyed f, Apply f, Applicative f, ZipWithKey 
 -- * Default definitions
 
 fmapRep :: Representable f => (a -> b) -> f a -> f b
-fmapRep f = tabulate . fmap f . index 
+fmapRep f = tabulate . fmap f . index
 
 mapWithKeyRep :: Representable f => (Key f -> a -> b) -> f a -> f b
 mapWithKeyRep f = tabulate . (<*>) f . index
@@ -145,3 +147,5 @@ instance Representable w => Representable (TracedT s w) where
 instance (Representable f, Representable g) => Representable (Product f g) where
   tabulate f = Pair (tabulate (f . Left)) (tabulate (f . Right))
 
+instance Representable f => Representable (Cofree f) where
+  tabulate f = f Seq.empty :< tabulate (\k -> tabulate (f . (k Seq.<|)))
