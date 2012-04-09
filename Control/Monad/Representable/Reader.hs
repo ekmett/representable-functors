@@ -6,18 +6,18 @@
 -- Copyright   :  (c) Edward Kmett 2011,
 --                (c) Conal Elliott 2008
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- 
+--
 -- Representable functors on Hask all monads, being isomorphic to
 -- a reader monad.
 ----------------------------------------------------------------------
 
 module Control.Monad.Representable.Reader
-  ( 
+  (
   -- * Representable functor monad
-    Reader, reader, runReader
+    Reader, runReader
   -- * Monad Transformer
   , ReaderT(..)
   , ask
@@ -45,8 +45,6 @@ import Prelude hiding (lookup)
 
 type Reader f = ReaderT f Identity
 
-reader :: Representable f => (Key f -> b) -> Reader f b
-reader = readerT . fmap Identity
 
 runReader :: Indexable f => Reader f b -> Key f -> b
 runReader = fmap runIdentity . runReaderT
@@ -59,7 +57,7 @@ readerT :: Representable f => (Key f -> m b) -> ReaderT f m b
 readerT = ReaderT . tabulate
 
 runReaderT :: Indexable f => ReaderT f m b -> Key f -> m b
-runReaderT = index . getReaderT 
+runReaderT = index . getReaderT
 
 type instance Key (ReaderT f m) = (Key f, Key m)
 
@@ -70,7 +68,7 @@ instance (Representable f, Apply m) => Apply (ReaderT f m) where
   ReaderT ff <.> ReaderT fa = ReaderT ((<.>) <$> ff <.> fa)
 
 instance (Representable f, Applicative m) => Applicative (ReaderT f m) where
-  pure = ReaderT . pure . pure 
+  pure = ReaderT . pure . pure
   ReaderT ff <*> ReaderT fa = ReaderT ((<*>) <$> ff <*> fa)
 
 instance (Representable f, Bind m) => Bind (ReaderT f m) where
@@ -80,12 +78,13 @@ instance (Representable f, Monad m) => Monad (ReaderT f m) where
   return = ReaderT . pure . return
   ReaderT fm >>= f = ReaderT $ tabulate (\a -> index fm a >>= flip index a . getReaderT . f)
 
-instance (Representable f, Monad m, Key f ~ e) => MonadReader e (ReaderT f m) where 
+instance (Representable f, Monad m, Key f ~ e) => MonadReader e (ReaderT f m) where
   ask = ReaderT (tabulate return)
   local f m = readerT $ \r -> runReaderT m (f r)
-  
+  reader = readerT . fmap return
+
 instance Representable f => MonadTrans (ReaderT f) where
-  lift = ReaderT . pure 
+  lift = ReaderT . pure
 
 instance (Representable f, Distributive m) => Distributive (ReaderT f m) where
   distribute = ReaderT . fmap distribute . collect getReaderT
@@ -104,7 +103,7 @@ instance (Lookup f, Lookup m) => Lookup (ReaderT f m) where
 
 instance (Representable f, Representable m) => Representable (ReaderT f m) where
   tabulate = ReaderT . tabulate . fmap tabulate . curry
-  
+
 instance (Foldable f, Foldable m) => Foldable (ReaderT f m) where
   foldMap f = foldMap (foldMap f) . getReaderT
 
@@ -115,7 +114,7 @@ instance (FoldableWithKey f, FoldableWithKey m) => FoldableWithKey (ReaderT f m)
   foldMapWithKey f = foldMapWithKey (\k -> foldMapWithKey (f . (,) k)) . getReaderT
 
 instance (FoldableWithKey1 f, FoldableWithKey1 m) => FoldableWithKey1 (ReaderT f m) where
-  foldMapWithKey1 f = foldMapWithKey1 (\k -> foldMapWithKey1 (f . (,) k)) . getReaderT 
+  foldMapWithKey1 f = foldMapWithKey1 (\k -> foldMapWithKey1 (f . (,) k)) . getReaderT
 
 instance (Traversable f, Traversable m) => Traversable (ReaderT f m) where
   traverse f = fmap ReaderT . traverse (traverse f) . getReaderT
@@ -143,7 +142,7 @@ instance (Representable f, Representable m, Semigroup (Key f), Semigroup (Key m)
   extract = extractRep
 
 instance (Representable f, MonadIO m) => MonadIO (ReaderT f m) where
-  liftIO = lift . liftIO 
+  liftIO = lift . liftIO
 
 instance (Representable f, MonadWriter w m) => MonadWriter w (ReaderT f m) where
   tell = lift . tell

@@ -9,16 +9,15 @@
 -- Module      :  Control.Monad.Representable.State
 -- Copyright   :  (c) Edward Kmett & Sjoerd Visscher 2011
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- 
+--
 -- A generalized State monad, parameterized by a Representable functor.
 -- The representation of that functor serves as the state.
 ----------------------------------------------------------------------
 module Control.Monad.Representable.State
    ( State
-   , state
    , runState
    , evalState
    , execState
@@ -51,7 +50,7 @@ import Control.Monad.Identity
 import Data.Functor.Representable
 
 -- ---------------------------------------------------------------------------
--- | A memoized state monad parameterized by a representable functor @g@, where 
+-- | A memoized state monad parameterized by a representable functor @g@, where
 -- the representatation of @g@, @Key g@ is the state to carry.
 --
 -- The 'return' function leaves the state unchanged, while @>>=@ uses
@@ -59,16 +58,10 @@ import Data.Functor.Representable
 -- the second.
 type State g = StateT g Identity
 
--- | Construct a state monad computation from a function.
--- (The inverse of 'runState'.)
-state :: Representable g 
-      => (Key g -> (a, Key g))  -- ^ pure state transformer
-      -> State g a              -- ^ equivalent state-passing computation
-state f = stateT (Identity . f)
 
 -- | Unwrap a state monad computation as a function.
 -- (The inverse of 'state'.)
-runState :: Indexable g 
+runState :: Indexable g
          => State g a   -- ^ state-passing computation to execute
          -> Key g       -- ^ initial state
          -> (a, Key g)  -- ^ return value and final state
@@ -78,7 +71,7 @@ runState m = runIdentity . runStateT m
 -- and return the final value, discarding the final state.
 --
 -- * @'evalState' m s = 'fst' ('runState' m s)@
-evalState :: Indexable g 
+evalState :: Indexable g
           => State g a  -- ^state-passing computation to execute
           -> Key g      -- ^initial value
           -> a          -- ^return value of the state computation
@@ -111,7 +104,7 @@ mapState f = mapStateT (Identity . f . runIdentity)
 -- The 'return' function leaves the state unchanged, while @>>=@ uses
 -- the final state of the first computation as the initial state of
 -- the second.
-newtype StateT g m a = StateT { getStateT :: g (m (a, Key g)) } 
+newtype StateT g m a = StateT { getStateT :: g (m (a, Key g)) }
 
 stateT :: Representable g => (Key g -> m (a, Key g)) -> StateT g m a
 stateT = StateT . tabulate
@@ -152,7 +145,7 @@ instance (Representable g, Functor m, Monad m) => Applicative (StateT g m) where
 
 instance (Functor g, Indexable g, Bind m) => Bind (StateT g m) where
   StateT m >>- f = StateT $ fmap (>>- rightAdjunctRep (runStateT . f)) m
-   
+
 instance (Representable g, Monad m) => Monad (StateT g m) where
   return = StateT . leftAdjunctRep return
   StateT m >>= f = StateT $ fmap (>>= rightAdjunctRep (runStateT . f)) m
@@ -166,6 +159,7 @@ instance Representable f => MonadTrans (StateT f) where
 instance (Representable g, Monad m, Key g ~ s) => MonadState s (StateT g m) where
   get = stateT $ \s -> return (s, s)
   put s = StateT $ pure $ return ((),s)
+  state f = stateT (return . f)
 
 -- get :: (Representable g, Monad m) => StateT g m (Key g)
 -- put :: (Applicative g, Monad m) => Key g -> StateT g m ()
@@ -194,7 +188,7 @@ instance (Representable g, MonadCont m) => MonadCont (StateT g m) where
 
 instance (Functor f, Representable g, MonadFree f m) => MonadFree f (StateT g m) where
     wrap as = stateT $ \s -> wrap (fmap (`runStateT` s) as)
-  
+
 leftAdjunctRep :: Representable u => ((a, Key u) -> b) -> a -> u b
 leftAdjunctRep f a = tabulate (\s -> f (a,s))
 
