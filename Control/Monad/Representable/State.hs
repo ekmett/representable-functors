@@ -1,9 +1,10 @@
-{-# LANGUAGE TypeFamilies
-           , TypeSynonymInstances
-           , FlexibleContexts
-           , FlexibleInstances
-           , MultiParamTypeClasses
-           , UndecidableInstances #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 ----------------------------------------------------------------------
 -- |
 -- Module      :  Control.Monad.Representable.State
@@ -159,7 +160,9 @@ instance Representable f => MonadTrans (StateT f) where
 instance (Representable g, Monad m, Key g ~ s) => MonadState s (StateT g m) where
   get = stateT $ \s -> return (s, s)
   put s = StateT $ pure $ return ((),s)
+#if MIN_VERSION_transformers(0,3,0)
   state f = stateT (return . f)
+#endif
 
 -- get :: (Representable g, Monad m) => StateT g m (Key g)
 -- put :: (Applicative g, Monad m) => Key g -> StateT g m ()

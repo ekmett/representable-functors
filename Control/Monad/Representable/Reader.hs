@@ -78,10 +78,13 @@ instance (Representable f, Monad m) => Monad (ReaderT f m) where
   return = ReaderT . pure . return
   ReaderT fm >>= f = ReaderT $ tabulate (\a -> index fm a >>= flip index a . getReaderT . f)
 
+
 instance (Representable f, Monad m, Key f ~ e) => MonadReader e (ReaderT f m) where
   ask = ReaderT (tabulate return)
   local f m = readerT $ \r -> runReaderT m (f r)
+#if MIN_VERSION_transformers(0,3,0)
   reader = readerT . fmap return
+#endif
 
 instance Representable f => MonadTrans (ReaderT f) where
   lift = ReaderT . pure
