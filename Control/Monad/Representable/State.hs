@@ -159,7 +159,7 @@ instance Representable f => MonadTrans (StateT f) where
 
 instance (Representable g, Monad m, Key g ~ s) => MonadState s (StateT g m) where
   get = stateT $ \s -> return (s, s)
-  put s = StateT $ pure $ return ((),s)
+  put s = StateT $ pureRep $ return ((),s)
 #if MIN_VERSION_transformers(0,3,0)
   state f = stateT (return . f)
 #endif
@@ -205,7 +205,7 @@ liftCallCC :: Representable g => ((((a,Key g) -> m (b,Key g)) -> m (a,Key g)) ->
     ((a -> StateT g m b) -> StateT g m a) -> StateT g m a
 liftCallCC callCC' f = stateT $ \s ->
     callCC' $ \c ->
-    runStateT (f (\a -> StateT $ pure $ c (a, s))) s
+    runStateT (f (\a -> StateT $ pureRep $ c (a, s))) s
 
 -- | In-situ lifting of a @callCC@ operation to the new monad.
 -- This version uses the current state on entering the continuation.

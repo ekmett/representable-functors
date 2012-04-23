@@ -1,4 +1,9 @@
-{-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# OPTIONS_GHC -fenable-rewrite-rules #-}
 ----------------------------------------------------------------------
 -- |
@@ -15,11 +20,13 @@
 ----------------------------------------------------------------------
 
 module Data.Functor.Representable
-  ( 
+  (
   -- * Representable Functors
     Representable(..)
+  -- * Wrapped representable functors
+  , Rep(..)
   -- ** Representable Lenses
-  , repLens 
+  , repLens
   -- * Default definitions
   -- ** Functor
   , fmapRep
@@ -30,6 +37,8 @@ module Data.Functor.Representable
   -- ** Apply/Applicative
   , apRep
   , pureRep
+  , liftR2
+  , liftR3
   -- ** Bind/Monad
   , bindRep
   , bindWithKeyRep
@@ -47,6 +56,8 @@ module Data.Functor.Representable
   ) where
 
 import Control.Applicative
+import Control.Comonad
+import Control.Comonad.Trans.Class
 import Control.Comonad.Trans.Traced
 import Control.Comonad.Cofree
 import Control.Monad.Trans.Identity
@@ -68,7 +79,7 @@ import Prelude hiding (lookup)
 -- > index . tabulate = id
 -- > tabulate . return f = return f
 
-class (Indexable f, Distributive f, Keyed f, Apply f, Applicative f, ZipWithKey f) => Representable f where
+class (Functor f, Indexable f) => Representable f where
   -- | > fmap f . tabulate = tabulate . fmap f
   tabulate :: (Key f -> a) -> f a
 
@@ -100,7 +111,7 @@ localRep :: Representable f => (Key f -> Key f) -> f a -> f a
 localRep f m = tabulate (index m . f)
 
 apRep :: Representable f => f (a -> b) -> f a -> f b
-apRep f g = tabulate (index f <*> index g) 
+apRep f g = tabulate (index f <*> index g)
 
 zipWithRep :: Representable f => (a -> b -> c) -> f a -> f b -> f c
 zipWithRep f g h = tabulate $ \k -> f (index g k) (index h k)
@@ -122,7 +133,7 @@ extractRep fa = index fa mempty
 
 -- | We extend lens across a representable functor, due to the preservation of limits.
 repLens :: Representable f => Lens a b -> Lens (f a) (f b)
-repLens l = lens (fmap (l ^$)) (liftA2 (l ^=))
+repLens l = lens (fmapRep (l ^$)) $ \a b -> unrep $ liftA2 (l ^=) (Rep a) (Rep b)
 
 -- * Instances
 
@@ -142,10 +153,75 @@ instance (Representable f, Representable g) => Representable (Compose f g) where
   tabulate = Compose . tabulate . fmap tabulate . curry
 
 instance Representable w => Representable (TracedT s w) where
-  tabulate = TracedT . collect tabulate . curry
+  -- tabulate = TracedT . collect tabulate . curry
+  tabulate = TracedT . unrep . collect (Rep . tabulate) . curry
 
 instance (Representable f, Representable g) => Representable (Product f g) where
   tabulate f = Pair (tabulate (f . Left)) (tabulate (f . Right))
 
 instance Representable f => Representable (Cofree f) where
   tabulate f = f Seq.empty :< tabulate (\k -> tabulate (f . (k Seq.<|)))
+
+
+newtype Rep f a = Rep { unrep :: f a }
+
+type instance Key (Rep f) = Key f
+
+instance Representable f => Representable (Rep f) where
+  tabulate = Rep . tabulate
+
+instance Indexable f => Indexable (Rep f) where
+  index (Rep f) i = index f i
+
+instance Representable f => Keyed (Rep f) where
+  mapWithKey = mapWithKeyRep
+
+instance Indexable f => Lookup (Rep f) where
+  lookup = lookupDefault
+
+instance Representable f => Functor (Rep f) where
+  fmap = fmapRep
+
+instance Representable f => Apply (Rep f) where
+  (<.>) = apRep
+
+instance Representable f => Applicative (Rep f) where
+  pure = pureRep
+  (<*>) = apRep
+
+instance Representable f => Distributive (Rep f) where
+  distribute = distributeRep
+
+instance Representable f => Bind (Rep f) where
+  (>>-) = bindRep
+
+instance Representable f => Monad (Rep f) where
+  return = pureRep
+  (>>=) = bindRep
+
+#if __GLASGOW_HASKELL__ >= 704
+instance (Representable f, Key f ~ a) => MonadReader a (Rep f) where
+  ask = askRep
+  local = localRep
+#endif
+
+instance Representable f => Zip (Rep f) where
+  zipWith = zipWithRep
+
+instance Representable f => ZipWithKey (Rep f) where
+  zipWithKey = zipWithKeyRep
+
+instance (Representable f, Semigroup (Key f)) => Extend (Rep f) where
+  extend = extendRep
+
+instance (Representable f, Semigroup (Key f), Monoid (Key f)) => Comonad (Rep f) where
+  extract = extractRep
+
+instance ComonadTrans Rep where
+  lower (Rep f) = f
+
+liftR2 :: Representable f => (a -> b -> c) -> f a -> f b -> f c
+liftR2 f fa fb = tabulate $ \i -> f (index fa i) (index fb i)
+
+liftR3 :: Representable f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
+liftR3 f fa fb fc = tabulate $ \i -> f (index fa i) (index fb i) (index fc i)

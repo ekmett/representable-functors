@@ -50,7 +50,7 @@ type Store g = StoreT g Identity
 
 -- | Construct a store comonad computation from a function and a current index.
 -- (The inverse of 'runStore'.)
-store :: Representable g 
+store :: Representable g
       => (Key g -> a)  -- ^ computation
       -> Key g         -- ^ index
       -> Store g a
@@ -58,7 +58,7 @@ store = storeT . Identity
 
 -- | Unwrap a state monad computation as a function.
 -- (The inverse of 'state'.)
-runStore :: Indexable g 
+runStore :: Indexable g
          => Store g a           -- ^ a store to access
          -> (Key g -> a, Key g) -- ^ initial state
 runStore (StoreT (Identity ga) k) = (index ga, k)
@@ -69,7 +69,7 @@ runStore (StoreT (Identity ga) k) = (index ga, k)
 --   * @g@ - A representable functor used to memoize results for an index @Key g@
 --
 --   * @w@ - The inner comonad.
-data StoreT g w a = StoreT (w (g a)) (Key g) 
+data StoreT g w a = StoreT (w (g a)) (Key g)
 
 storeT :: (Functor w, Representable g) => w (Key g -> a) -> Key g -> StoreT g w a 
 storeT = StoreT . fmap tabulate
@@ -88,11 +88,11 @@ instance (Functor w, Functor g) => Functor (StoreT g w) where
   fmap f (StoreT w s) = StoreT (fmap (fmap f) w) s
 
 instance (Apply w, Semigroup (Key g), Representable g) => Apply (StoreT g w) where
-  StoreT ff m <.> StoreT fa n = StoreT ((<*>) <$> ff <.> fa) (m <> n)
+  StoreT ff m <.> StoreT fa n = StoreT (apRep <$> ff <.> fa) (m <> n)
 
 instance (Applicative w, Semigroup (Key g), Monoid (Key g), Representable g) => Applicative (StoreT g w) where
-  pure a = StoreT (pure (pure a)) mempty
-  StoreT ff m <*> StoreT fa n = StoreT ((<*>) <$> ff <*> fa) (m `mappend` n)
+  pure a = StoreT (pure (pureRep a)) mempty
+  StoreT ff m <*> StoreT fa n = StoreT (apRep <$> ff <*> fa) (m `mappend` n)
 
 instance (Extend w, Representable g) => Extend (StoreT g w) where
   duplicate (StoreT wf s) = StoreT (extend (tabulate . StoreT) wf) s
