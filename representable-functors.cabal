@@ -1,6 +1,6 @@
 name:          representable-functors
 category:      Monads, Functors, Data Structures
-version:       2.3
+version:       2.4
 license:       BSD3
 cabal-version: >= 1.6
 license-file:  LICENSE
