@@ -25,8 +25,6 @@ module Data.Functor.Representable
     Representable(..)
   -- * Wrapped representable functors
   , Rep(..)
-  -- ** Representable Lenses
-  , repLens
   -- * Default definitions
   -- ** Functor
   , fmapRep
@@ -49,9 +47,11 @@ module Data.Functor.Representable
   , askRep
   , localRep
   -- ** Extend
+  , duplicatedRep
+  , extendedRep
+  -- ** Comonad
   , duplicateRep
   , extendRep
-  -- ** Comonad
   , extractRep
   ) where
 
@@ -67,8 +67,8 @@ import Data.Key
 import Data.Functor.Bind
 import Data.Functor.Identity
 import Data.Functor.Compose
+import Data.Functor.Extend
 import Data.Functor.Product
-import Data.Lens.Common
 import qualified Data.Sequence as Seq
 import Data.Semigroup hiding (Product)
 import Prelude hiding (lookup)
@@ -122,18 +122,28 @@ zipWithKeyRep f g h = tabulate $ \k -> f k (index g k) (index h k)
 distributeRep :: (Representable f, Functor w) => w (f a) -> f (w a)
 distributeRep wf = tabulate (\k -> fmap (`index` k) wf)
 
-duplicateRep :: (Representable f, Semigroup (Key f)) => f a -> f (f a)
-duplicateRep w = tabulate (\m -> tabulate (index w . (<>) m))
+duplicatedRep :: (Representable f, Semigroup (Key f)) => f a -> f (f a)
+duplicatedRep w = tabulate (\m -> tabulate (index w . (<>) m))
 
-extendRep :: (Representable f, Semigroup (Key f)) => (f a -> b) -> f a -> f b
-extendRep f w = tabulate (\m -> f (tabulate (index w . (<>) m)))
+extendedRep :: (Representable f, Semigroup (Key f)) => (f a -> b) -> f a -> f b
+extendedRep f w = tabulate (\m -> f (tabulate (index w . (<>) m)))
+
+duplicateRep :: (Representable f, Monoid (Key f)) => f a -> f (f a)
+duplicateRep w = tabulate (\m -> tabulate (index w . mappend m))
+
+extendRep :: (Representable f, Monoid (Key f)) => (f a -> b) -> f a -> f b
+extendRep f w = tabulate (\m -> f (tabulate (index w . mappend m)))
 
 extractRep :: (Indexable f, Monoid (Key f)) => f a -> a
 extractRep fa = index fa mempty
 
+{-
 -- | We extend lens across a representable functor, due to the preservation of limits.
 repLens :: Representable f => Lens a b -> Lens (f a) (f b)
 repLens l = lens (fmapRep (l ^$)) $ \a b -> unrep $ liftA2 (l ^=) (Rep a) (Rep b)
+-}
+
+-- representing :: (Representable f, Functor g) => ((c -> g d) -> a -> g b) -> (f c -> g (f d)) -> f a -> g (f b)
 
 -- * Instances
 
@@ -212,9 +222,10 @@ instance Representable f => ZipWithKey (Rep f) where
   zipWithKey = zipWithKeyRep
 
 instance (Representable f, Semigroup (Key f)) => Extend (Rep f) where
-  extend = extendRep
+  extended = extendedRep
 
-instance (Representable f, Semigroup (Key f), Monoid (Key f)) => Comonad (Rep f) where
+instance (Representable f, Monoid (Key f)) => Comonad (Rep f) where
+  extend = extendRep
   extract = extractRep
 
 instance ComonadTrans Rep where

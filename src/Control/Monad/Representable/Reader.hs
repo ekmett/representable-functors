@@ -34,6 +34,7 @@ import Control.Monad.IO.Class
 import Data.Distributive
 import Data.Key
 import Data.Functor.Bind
+import Data.Functor.Extend
 import Data.Functor.Identity
 import Data.Functor.Representable
 import Data.Foldable
@@ -107,8 +108,8 @@ instance (Indexable f, Lookup m) => Lookup (ReaderT f m) where
   lookup (k,k') (ReaderT fm) = lookup k' (index fm k)
 
 instance (Representable f, Representable m, Semigroup (Key f), Semigroup (Key m)) => Extend (ReaderT f m) where
-  extend = extendRep
-  duplicate = duplicateRep
+  extended = extendedRep
+  duplicated = duplicatedRep
 
 instance (Representable f, Zip m) => Zip (ReaderT f m) where
   zipWith f (ReaderT as) (ReaderT bs) = ReaderT $ tabulate $ \i -> zipWith f (index as i) (index bs i)
@@ -116,7 +117,9 @@ instance (Representable f, Zip m) => Zip (ReaderT f m) where
 instance (Representable f, ZipWithKey m) => ZipWithKey (ReaderT f m) where
   zipWithKey f (ReaderT as) (ReaderT bs) = ReaderT $ tabulate $ \i -> zipWithKey (f . (,) i) (index as i) (index bs i)
 
-instance (Representable f, Representable m, Semigroup (Key f), Semigroup (Key m), Monoid (Key f), Monoid (Key m)) => Comonad (ReaderT f m) where
+instance (Representable f, Representable m, Monoid (Key f), Monoid (Key m)) => Comonad (ReaderT f m) where
+  extend = extendRep
+  duplicate = duplicateRep
   extract = extractRep
 
 instance (Representable f, MonadIO m) => MonadIO (ReaderT f m) where
