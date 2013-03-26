@@ -79,7 +79,7 @@ import Prelude hiding (lookup)
 -- > index . tabulate = id
 -- > tabulate . return f = return f
 
-class (Functor f, Indexable f) => Representable f where
+class (Distributive f, Indexable f) => Representable f where
   -- | > fmap f . tabulate = tabulate . fmap f
   tabulate :: (Key f -> a) -> f a
 
