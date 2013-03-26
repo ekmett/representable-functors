@@ -56,7 +56,7 @@ library
     transformers         >= 0.2 && < 0.4
 
   exposed-modules:
-    Data.Functor.Corepresentable
+    Data.Functor.Contravariant.Representable
     Data.Functor.Representable
     Control.Monad.Representable.Reader
     Control.Monad.Representable.State

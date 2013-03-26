@@ -1,6 +1,5 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts, FlexibleInstances #-}
 {-# OPTIONS_GHC -fenable-rewrite-rules #-}
-
 ----------------------------------------------------------------------
 -- |
 -- Copyright   :  (c) Edward Kmett 2011-2013
@@ -13,8 +12,7 @@
 -- types are isomorphic to @(_ -> r)@ and resemble mappings to a
 -- fixed range.
 ----------------------------------------------------------------------
-
-module Data.Functor.Corepresentable
+module Data.Functor.Contravariant.Representable
   (
   -- * Values
     Value
@@ -23,7 +21,7 @@ module Data.Functor.Corepresentable
   -- * Contravariant Indexed
   , Coindexed(..)
   -- * Representable Contravariant Functors
-  , Corepresentable(..)
+  , Representable(..)
   -- * Default definitions
   , contramapDefault
   , contramapWithValueDefault
@@ -45,27 +43,22 @@ class Contravariant f => Valued f where
 class Coindexed f where
   coindex :: f a -> a -> Value f
 
--- | A 'Functor' @f@ is 'Corepresentable' if 'corep' and 'coindex' witness an isomorphism to @(_ -> Value f)@.
---
--- > tabulate . index = id
--- > index . tabulate = id
--- > tabulate . return f = return f
-
-class (Coindexed f, Valued f) => Corepresentable f where
-  -- | > contramap f (corep g) = corep (g . f)
-  corep :: (a -> Value f) -> f a
+-- | A 'Contravariant' functor @f@ is 'Representable' if 'contrarep' and 'coindex' witness an isomorphism to @(_ -> Value f)@.
+class (Coindexed f, Valued f) => Representable f where
+  -- | > contramap f (contrarep g) = contrarep (g . f)
+  contrarep :: (a -> Value f) -> f a
 
 {-# RULES
-"corep/coindex" forall t. corep (coindex t) = t
+"contrarep/coindex" forall t. contrarep (coindex t) = t
  #-}
 
 -- * Default definitions
 
-contramapDefault :: Corepresentable f => (a -> b) -> f b -> f a
-contramapDefault f = corep . (. f) . coindex
+contramapDefault :: Representable f => (a -> b) -> f b -> f a
+contramapDefault f = contrarep . (. f) . coindex
 
-contramapWithValueDefault :: Corepresentable f => (b -> Either a (Value f)) -> f a -> f b
-contramapWithValueDefault f p = corep $ either (coindex p) id . f
+contramapWithValueDefault :: Representable f => (b -> Either a (Value f)) -> f a -> f b
+contramapWithValueDefault f p = contrarep $ either (coindex p) id . f
 
 -- * Dual arrows
 
@@ -77,8 +70,8 @@ instance Valued (Op r) where
 instance Coindexed (Op r) where
   coindex = getOp
 
-instance Corepresentable (Op r) where
-  corep = Op
+instance Representable (Op r) where
+  contrarep = Op
 
 -- * Predicates
 
@@ -90,8 +83,8 @@ instance Valued Predicate where
 instance Coindexed Predicate where
   coindex = getPredicate
 
-instance Corepresentable Predicate where
-  corep = Predicate
+instance Representable Predicate where
+  contrarep = Predicate
 
 -- * Products
 
@@ -108,9 +101,8 @@ instance (Valued f, Valued g) => Valued (Product f g) where
 instance (Coindexed f, Coindexed g) => Coindexed (Product f g) where
   coindex (Pair f g) a = (coindex f a, coindex g a)
 
-instance (Corepresentable f, Corepresentable g) => Corepresentable (Product f g) where
-  corep f = Pair (corep (fst . f)) (corep (snd . f))
-
+instance (Representable f, Representable g) => Representable (Product f g) where
+  contrarep f = Pair (contrarep (fst . f)) (contrarep (snd . f))
 
 -- * Coproducts
 
