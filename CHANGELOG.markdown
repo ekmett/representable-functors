@@ -1,3 +1,7 @@
+3.1
+---
+* Required Distributive as a superclass
+
 3.0.1
 -----
 * Removed intra-package dependencies
