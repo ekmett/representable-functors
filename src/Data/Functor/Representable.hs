@@ -7,7 +7,7 @@
 {-# OPTIONS_GHC -fenable-rewrite-rules #-}
 ----------------------------------------------------------------------
 -- |
--- Copyright   :  (c) Edward Kmett 2011
+-- Copyright   :  (c) Edward Kmett 2011-2013
 -- License     :  BSD3
 --
 -- Maintainer  :  ekmett@gmail.com
