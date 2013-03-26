@@ -7,14 +7,13 @@
 {-# OPTIONS_GHC -fenable-rewrite-rules #-}
 ----------------------------------------------------------------------
 -- |
--- Module      :  Data.Functor.Representable
 -- Copyright   :  (c) Edward Kmett 2011
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- 
--- Representable endofunctors over the category of Haskell types are 
+--
+-- Representable endofunctors over the category of Haskell types are
 -- isomorphic to the reader monad and so inherit a very large number
 -- of properties for free.
 ----------------------------------------------------------------------
@@ -157,7 +156,7 @@ instance Representable ((->) e) where
   tabulate = id
 
 instance Representable m => Representable (ReaderT e m) where
-  tabulate = ReaderT . fmap tabulate . curry 
+  tabulate = ReaderT . fmap tabulate . curry
 
 instance (Representable f, Representable g) => Representable (Compose f g) where
   tabulate = Compose . tabulate . fmap tabulate . curry

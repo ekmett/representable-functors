@@ -3,20 +3,19 @@
 
 ----------------------------------------------------------------------
 -- |
--- Module      :  Data.Functor.Corepresentable
--- Copyright   :  (c) Edward Kmett 2011
+-- Copyright   :  (c) Edward Kmett 2011-2013
 -- License     :  BSD3
--- 
+--
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- 
--- Representable contravariant endofunctors over the category of Haskell 
+--
+-- Representable contravariant endofunctors over the category of Haskell
 -- types are isomorphic to @(_ -> r)@ and resemble mappings to a
 -- fixed range.
 ----------------------------------------------------------------------
 
 module Data.Functor.Corepresentable
-  ( 
+  (
   -- * Values
     Value
   -- * Contravariant Keyed
@@ -63,7 +62,7 @@ class (Coindexed f, Valued f) => Corepresentable f where
 -- * Default definitions
 
 contramapDefault :: Corepresentable f => (a -> b) -> f b -> f a
-contramapDefault f = corep . (. f) . coindex 
+contramapDefault f = corep . (. f) . coindex
 
 contramapWithValueDefault :: Corepresentable f => (b -> Either a (Value f)) -> f a -> f b
 contramapWithValueDefault f p = corep $ either (coindex p) id . f
@@ -100,7 +99,7 @@ type instance Value (Product f g) = (Value f, Value g)
 
 instance (Valued f, Valued g) => Valued (Product f g) where
   -- contramapWithValue :: (b -> Either a (Value f)) -> f a -> f b
-  contramapWithValue h (Pair f g) = Pair 
+  contramapWithValue h (Pair f g) = Pair
       (contramapWithValue (fmap fst . h) f)
       (contramapWithValue (fmap snd . h) g)
       -- (contramapWithValue (either id snd . h) g)
@@ -118,5 +117,5 @@ instance (Corepresentable f, Corepresentable g) => Corepresentable (Product f g)
 type instance Value (Coproduct f g) = Either (Value f) (Value g)
 
 instance (Coindexed f, Coindexed g) => Coindexed (Coproduct f g) where
-  coindex (Coproduct (Left f)) a  = Left  $ coindex f a 
+  coindex (Coproduct (Left f)) a  = Left  $ coindex f a
   coindex (Coproduct (Right g)) a = Right $ coindex g a
