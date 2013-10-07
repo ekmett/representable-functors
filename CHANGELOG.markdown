@@ -1,3 +1,11 @@
+3.2.0.1
+-------
+* Fixed issue [#1](https://github.com/ekmett/representable-functors/pull/1). Did `RULES` parsing change with GHC 7.6.3?
+
+3.2
+---
+* Added Day Convolution
+
 3.1
 ---
 * Required Distributive as a superclass
