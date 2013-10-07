@@ -83,8 +83,7 @@ class (Distributive f, Indexable f) => Representable f where
   tabulate :: (Key f -> a) -> f a
 
 {-# RULES
-"tabulate/index" forall t. tabulate (index t) = t
- #-}
+"tabulate/index" forall t. tabulate (index t) = t #-}
 
 -- * Default definitions
 
