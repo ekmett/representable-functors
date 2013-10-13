@@ -1,3 +1,7 @@
+3.2.0.2
+* Updated array dependency
+* Added proper upper bounds on dependencies
+
 3.2.0.1
 -------
 * Fixed issue [#1](https://github.com/ekmett/representable-functors/pull/1). Did `RULES` parsing change with GHC 7.6.3?
