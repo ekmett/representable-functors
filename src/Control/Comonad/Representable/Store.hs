@@ -109,7 +109,7 @@ instance Indexable g => ComonadTrans (StoreT g) where
   lower (StoreT w s) = fmap (`index` s) w
 
 instance ComonadHoist (StoreT g) where
-  cohoist (StoreT w s) = StoreT (Identity (extract w)) s
+  cohoist l (StoreT w s) = StoreT (l w) s
 
 instance (ComonadTraced m w, Representable g) => ComonadTraced m (StoreT g w) where
   trace m = trace m . lower
